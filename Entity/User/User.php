@@ -3,12 +3,19 @@
 namespace Onfan\UserBundle\Entity\User;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
+
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints as DoctrineAssert;
+
 
 /**
  * Onfan\UserBundle\Entity\User\User
  *
  * @ORM\Table()
  * @ORM\Entity(repositoryClass="Onfan\UserBundle\Entity\User\UserRepository")
+ * @ORM\HasLifecycleCallbacks()
+ * @DoctrineAssert\UniqueEntity(fields="username", message="Username is already used")
  */
 class User
 {
@@ -24,49 +31,107 @@ class User
     /**
      * @var string $username
      *
-     * @ORM\Column(name="username", type="string", length=255)
+     * @ORM\Column(name="username", type="string", unique=true, length=255, nullable=false)
      */
     private $username;
+    
+    /**
+     * @var string $email
+     *
+     * @ORM\Column(name="email", type="string", length=255, nullable=true)
+     * @Assert\Email(message="Invalid email address.")
+     * 
+     */
+    private $email;
 
     /**
      * @var string $password
      *
-     * @ORM\Column(name="password", type="string", length=255)
+     * @ORM\Column(name="password", type="string", length=255, nullable=true)
      */
     private $password;
+    
+    /**
+     * @var string $salt
+     *
+     * @ORM\Column(name="salt", type="string", length=255, nullable=true)
+     */
+    private $salt;
 
     /**
      * @var string $facebook_username
      *
-     * @ORM\Column(name="facebook_username", type="string", length=255)
+     * @ORM\Column(name="facebook_username", type="string", length=255, nullable=true)
      */
     private $facebook_username;
 
     /**
      * @var integer $facebook_id
      *
-     * @ORM\Column(name="facebook_id", type="integer")
+     * @ORM\Column(name="facebook_id", type="integer", nullable=true)
      */
     private $facebook_id;
 
     /**
      * @var string $name
      *
-     * @ORM\Column(name="name", type="string", length=255)
+     * @ORM\Column(name="name", type="string", length=255, nullable=true)
      */
     private $name;
 
     /**
      * @var string $surname
      *
-     * @ORM\Column(name="surname", type="string", length=255)
+     * @ORM\Column(name="surname", type="string", length=255, nullable=true)
      */
     private $surname;
     
     /**
+     * @var string $enabled
+     *
+     * @ORM\Column(name="enabled", type="boolean", nullable=false)
+     */
+    private $enabled;
+    
+    /**
+     * @var string $verified
+     *
+     * @ORM\Column(name="verified", type="boolean", nullable=false)
+     */
+    private $verified;
+    
+    /**
+     * @var string $verification_code
+     *
+     * @ORM\Column(name="verification_code", type="string", length=255, nullable=true)
+     */
+    private $verification_code;
+    
+    /**
+     * @var string $created_at
+     *
+     * @ORM\Column(name="created_at", type="datetime", nullable=false)
+     */
+    private $created_at;
+    
+    /**
+     * @var string $updated_at
+     *
+     * @ORM\Column(name="updated_at", type="datetime", nullable=true)
+     */
+    private $updated_at;
+    
+    /**
+     * @var string $last_login
+     *
+     * @ORM\Column(name="last_login", type="datetime", nullable=true)
+     */
+    private $last_login;
+    
+    /**
      * @ORM\OneToMany(targetEntity="AccessToken", mappedBy="user")
      */
-   protected $access_tokens;
+    protected $access_tokens;
 
 
     /**
@@ -255,5 +320,192 @@ class User
     public function getAccessTokens()
     {
         return $this->access_tokens;
+    }
+    
+
+    /**
+     * Set email
+     *
+     * @param string $email
+     * @return User
+     */
+    public function setEmail($email)
+    {
+        $this->email = $email;
+    
+        return $this;
+    }
+
+    /**
+     * Get email
+     *
+     * @return string 
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    /**
+     * Set enabled
+     *
+     * @param boolean $enabled
+     * @return User
+     */
+    public function setEnabled($enabled)
+    {
+        $this->enabled = $enabled;
+    
+        return $this;
+    }
+
+    /**
+     * Get enabled
+     *
+     * @return boolean 
+     */
+    public function getEnabled()
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * Set verified
+     *
+     * @param boolean $verified
+     * @return User
+     */
+    public function setVerified($verified)
+    {
+        $this->verified = $verified;
+    
+        return $this;
+    }
+
+    /**
+     * Get verified
+     *
+     * @return boolean 
+     */
+    public function getVerified()
+    {
+        return $this->verified;
+    }
+
+    /**
+     * Set verification_code
+     *
+     * @param string $verificationCode
+     * @return User
+     */
+    public function setVerificationCode($verificationCode)
+    {
+        $this->verification_code = $verificationCode;
+    
+        return $this;
+    }
+
+    /**
+     * Get verification_code
+     *
+     * @return string 
+     */
+    public function getVerificationCode()
+    {
+        return $this->verification_code;
+    }
+
+    /**
+     * Set created_at
+     *
+     * @ORM\PrePersist
+     * @param \DateTime $createdAt
+     * @return User
+     */
+    public function setCreatedAt()
+    {
+        $this->created_at = new \DateTime();
+    
+        return $this;
+    }
+
+    /**
+     * Get created_at
+     *
+     * @return \DateTime 
+     */
+    public function getCreatedAt()
+    {
+        return $this->created_at;
+    }
+
+    /**
+     * Set updated_at
+     *
+     * @ORM\PreUpdate
+     * @param \DateTime $updatedAt
+     * @return User
+     */
+    public function setUpdatedAt()
+    {
+        $this->updated_at = new \DateTime();
+    
+        return $this;
+    }
+
+    /**
+     * Get updated_at
+     *
+     * @return \DateTime 
+     */
+    public function getUpdatedAt()
+    {
+        return $this->updated_at;
+    }
+
+    /**
+     * Set last_login
+     *
+     * @param \DateTime $lastLogin
+     * @return User
+     */
+    public function setLastLogin($lastLogin)
+    {
+        $this->last_login = $lastLogin;
+    
+        return $this;
+    }
+
+    /**
+     * Get last_login
+     *
+     * @return \DateTime 
+     */
+    public function getLastLogin()
+    {
+        return $this->last_login;
+    }
+
+    /**
+     * Set salt
+     *
+     * @param string $salt
+     * @return User
+     */
+    public function setSalt($salt)
+    {
+        $this->salt = $salt;
+    
+        return $this;
+    }
+
+    /**
+     * Get salt
+     *
+     * @return string 
+     */
+    public function getSalt()
+    {
+        return $this->salt;
     }
 }
