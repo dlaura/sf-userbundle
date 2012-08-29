@@ -3,6 +3,7 @@
 namespace Onfan\UserBundle\Entity\User;
 
 use Doctrine\ORM\Mapping as ORM;
+use Onfan\UserBundle\Util\CodeGenerator;
 
 /**
  * Onfan\UserBundle\Entity\User\AccessToken
@@ -29,11 +30,11 @@ class AccessToken
     private $access_token;
 
     /**
-     * @var \DateTime $expiration_time
+     * @var \DateTime $created_at
      *
-     * @ORM\Column(name="expiration_time", type="datetime")
+     * @ORM\Column(name="created_at", type="datetime")
      */
-    private $expiration_time;
+    private $created_at;
 
     /**
      * @var boolean $enabled
@@ -46,7 +47,7 @@ class AccessToken
      * @ORM\ManyToOne(targetEntity="User", inversedBy="access_tokens")
      */
     protected $user;
-
+    
 
     /**
      * Get id
@@ -82,26 +83,26 @@ class AccessToken
     }
 
     /**
-     * Set expiration_time
+     * Set created_at
      *
-     * @param \DateTime $expirationTime
+     * @param \DateTime $created_at
      * @return AccessToken
      */
-    public function setExpirationTime($expirationTime)
+    public function setCreatedAt($created_at)
     {
-        $this->expiration_time = $expirationTime;
+        $this->created_at = $created_at;
     
         return $this;
     }
 
     /**
-     * Get expiration_time
+     * Get created_at
      *
      * @return \DateTime 
      */
-    public function getExpirationTime()
+    public function getCreatedAt()
     {
-        return $this->expiration_time;
+        return $this->created_at;
     }
 
     /**
@@ -148,5 +149,15 @@ class AccessToken
     public function getUser()
     {
         return $this->user;
+    }
+    
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->setEnabled(true);
+        $this->setCreatedAt(new \DateTime);
+        $this->setAccessToken(CodeGenerator::generateSessionAccessToken());
     }
 }
