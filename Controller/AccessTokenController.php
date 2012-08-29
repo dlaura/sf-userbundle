@@ -11,300 +11,123 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 use Onfan\UserBundle\Entity\User\User;
+use Onfan\UserBundle\Entity\User\AccessToken;
 
 use Onfan\UserBundle\Util\Codes as HttpCodes;
 use Onfan\UserBundle\Util\CodeGenerator;
 
-class UserController extends Controller
+class AccessTokenController extends Controller
 {
-    /**
-     * Get all users
-     * @Route("/users", defaults={"_format"="json"})
-     * @Method({"GET"})
-     */
-    public function indexAction()
-    {
-        $em = $this->getDoctrine()->getManager();
 
-        $users = $em->getRepository('OnfanUserBundle:User\User')->findAll();
-        
-        $serializer = $this->container->get('serializer');
-        $output = $serializer->serialize($users, 'json');
-        
-        return new Response($output);
-    }
-    
     /**
      * Create a new user
-     * @Route("/users", defaults={"_format"="json"})
+     * @Route("/accesstoken", defaults={"_format"="json"})
      * @Method({"POST"})
      */
-    public function createAction()
+    public function getAccessTokenAction()
     {
         $serializer = $this->container->get('serializer');
+        $em = $this->getDoctrine()->getManager();
         
-        $request = Request::createFromGlobals();        
-        
-        $user = new User();
-	
-        // set data from request        
-        if ($request->request->has('username')) {
-            $username = $request->request->get('username');
-            $user->setUsername($username);
-        }
-        
-	if ($request->request->has('password')) {
-            $password = $request->request->get('password');
-            $user->setPassword($password);
-        }
-        
-        if ($request->request->has('email')) {
-            $email = $request->request->get('email');
-            $user->setEmail($email);
-        }
-        
-        if ($request->request->has('name')) {
-            $name = $request->request->get('name');
-            $user->setName($name);
-        }
-        
-        if ($request->request->has('surname')) {
-            $surname = $request->request->get('surname');
-            $user->setSurname($surname);
-        }
-        
-        if ($request->request->has('facebook_username')) {
-            $facebook_username = $request->request->get('facebook_username');
-            $user->setFacebookUsername($facebook_username);
-        }
-        
-        if ($request->request->has('facebook_id')) {
-            $facebook_id = $request->request->get('facebook_id');
-            $user->setFacebookId($facebook_id);
-        }
-        
-        // set new user's defaults
-        $user->setVerified(FALSE);
-        $user->setVerificationCode(CodeGenerator::generateVerificationCode());
-        $user->setEnabled(TRUE);
-        
-        // validate user
-        $validator = $this->get('validator');
-        $errors = $validator->validate($user);
-        
-        if (count($errors)) {
-          $output_errors = $serializer->serialize($errors, 'json');
-          $error_response = new Response();
-          $error_response->setStatusCode(HttpCodes::HTTP_BAD_REQUEST, "Wrong input data");
-          $error_response->setContent($output_errors);
-          return $error_response;
-        }
-        
-        // persist user in db
-        $em = $this->getDoctrine()->getEntityManager();
-        $em->persist($user);
-        $em->flush();
-        
-        // send verification email
-        $this->sendVerificationEmail($user);
-        
-        // serialize user object
-        $output = $serializer->serialize($user, 'json');
-        
+        $request = Request::createFromGlobals();
         $response = new Response();
-        $response->setStatusCode(HttpCodes::HTTP_CREATED, "User created");
-        $response->setContent($output);
-        return $response;
+        
+        if ($request->request->has('type')) {
+            $type = $request->request->get('type');
+            switch ($type) {
+                case 'userpass':
+                    if ($request->request->has('username') && $request->request->has('password')) {
+                        $username = $request->request->get('username');            
+                        $password = $request->request->get('password');
+                        
+                        // check user's credentials
+                        $user = $em->getRepository('OnfanUserBundle:User\User')->findOneBy(array(
+                            'username' => $username,
+                            'password' => $password
+                        ));
+                        
+                        if ($user) {
+                            // create new token
+                            $token = new AccessToken();
+                            $token->setUser($user);
+                            
+                            // persist token
+                            $em->persist($token);
+                            $em->flush();
+                            
+                            // serialize token
+                            $output = $serializer->serialize($token, 'json');
+                            
+                            $response->setContent($output);
+                            return $response;                            
+                        } else {
+                            $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, "Invalid user/password credentials");
+                            return $response;
+                        }
+                    } else {
+                        $response->setStatusCode(HttpCodes::HTTP_BAD_REQUEST, "You must pass username and password");
+                        return $response;
+                    }
+
+                    break;
+                case 'facebook':
+                    if ($request->request->has('fb_access_token')) {
+                        $fb_access_token = $request->request->get('fb_access_token');                        
+                        
+                        // validate facebook access token
+                        // with PHP FB API
+                        
+                        if (true) {
+                            // if there is already a user with this FBUser.email
+                            if (true) {
+                                // update existing user with FB.id
+                                // load user into $user
+                            } else {
+                                // create a new user
+                                // set FB.id, and other data from FB
+                                // load user into $user
+                            }
+                            
+                            // create new token
+                            $token = new AccessToken();
+                            $token->setUser($user);
+                            
+                            // persist token
+                            $em->persist($token);
+                            $em->flush();
+                            
+                            // serialize token
+                            $output = $serializer->serialize($token, 'json');
+                            
+                            $response->setContent($output);
+                            return $response;                            
+                        } else {
+                            $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, "Invalid Facebook access token");
+                            return $response;
+                        }
+                    } else {
+                        $response->setStatusCode(HttpCodes::HTTP_BAD_REQUEST, "You must pass a valid Facebook access token");
+                        return $response;
+                    }
+
+
+                    break;
+
+                default:
+                    // undefined authentication type
+                    $response->setStatusCode(HttpCodes::HTTP_NOT_ACCEPTABLE, "Authentication method not acceptable");
+                    return $response;
+                    break;
+            }
+        } else {
+            // authentication type required
+            $response->setStatusCode(HttpCodes::HTTP_NOT_FOUND, "Authentication method not found");
+            return $response;
+            break;
+        }
    
     }
     
-    /**
-     * Get a specific user
-     * @Route("/users/{user_id}", defaults={"_format"="json"})
-     * @Method({"GET"})
-     */
-    public function showAction($user_id)
-    {
-        $em = $this->getDoctrine()->getManager();
 
-        $user = $em->getRepository('OnfanUserBundle:User\User')->find($user_id);
-
-        if (!$user) {
-            $response =  new Response();
-            $response->setStatusCode(HttpCodes::HTTP_NOT_FOUND, "Unable to find this User");
-            return $response;
-            //throw $this->createNotFoundException('Unable to find User\User entity.');
-        }
-        
-        $serializer = $this->container->get('serializer');
-        $output = $serializer->serialize($user, 'json');
-        
-        return new Response($output);
-    }
     
-    /**
-     * Update a specific user
-     * @Route("/users/{user_id}", defaults={"_format"="json"})
-     * @Method({"POST"})
-     */
-    public function updateAction($user_id)
-    {
-        $em = $this->getDoctrine()->getManager();
-        $serializer = $this->container->get('serializer');
-
-        $user = $em->getRepository('OnfanUserBundle:User\User')->find($user_id);
-
-        if (!$user) {
-            $response =  new Response();
-            $response->setStatusCode(HttpCodes::HTTP_NOT_FOUND, "Unable to find this User");
-            return $response;
-            //throw $this->createNotFoundException('Unable to find User\User entity.');
-        }
-        
-        // update fields
-        $request = Request::createFromGlobals();
-        
-	if ($request->request->has('password')) {
-            $password = $request->request->get('password');
-            $user->setPassword($password);
-        }
-        
-        if ($request->request->has('email')) {
-            $email = $request->request->get('email');            
-            $user->setEmail($email);
-        }
-        
-        if ($request->request->has('name')) {
-            $name = $request->request->get('name');
-            $user->setName($name);
-        }
-        
-        if ($request->request->has('surname')) {
-            $surname = $request->request->get('surname');
-            $user->setSurname($surname);
-        }
-        
-        if ($request->request->has('facebook_username')) {
-            $facebook_username = $request->request->get('facebook_username');
-            $user->setFacebookUsername($facebook_username);
-        }
-        
-        if ($request->request->has('facebook_id')) {
-            $facebook_id = $request->request->get('facebook_id');
-            $user->setFacebookId($facebook_id);
-        }
-        
-        // validate updated user
-        $validator = $this->get('validator');
-        $errors = $validator->validate($user);
-        
-        if (count($errors)) {
-          $output_errors = $serializer->serialize($errors, 'json');
-          $error_response = new Response();
-          $error_response->setStatusCode(HttpCodes::HTTP_BAD_REQUEST, "Wrong input data");
-          $error_response->setContent($output_errors);
-          return $error_response;
-        }
-        
-        // update user in db
-        $em->flush();
-        
-        $output = $serializer->serialize($user, 'json');        
-        $response =  new Response();
-        $response->setStatusCode(HttpCodes::HTTP_RESET_CONTENT, "User updated");
-        $response->setContent($output);
-        return $response;
-    }
-    
-    /**
-     * Delete a specific user
-     * @Route("/users/{user_id}", defaults={"_format"="json"})
-     * @Method({"DELETE"})
-     */
-    public function deleteAction($user_id)
-    {
-        $em = $this->getDoctrine()->getManager();
-
-        $user = $em->getRepository('OnfanUserBundle:User\User')->find($user_id);
-
-        if (!$user) {
-            $response =  new Response();
-            $response->setStatusCode(HttpCodes::HTTP_NOT_FOUND, "Unable to find this User");
-            return $response;
-            //throw $this->createNotFoundException('Unable to find User\User entity.');
-        }
-        
-        $em->remove($user);
-        $em->flush();
-        
-        $response =  new Response();
-        $response->setStatusCode(HttpCodes::HTTP_NO_CONTENT, "User deleted");
-        return $response;
-    }
-    
-    /**
-     * Verify a specific user
-     * @Route("/users/verified/{verification_code}", defaults={"_format"="json"})
-     * @Method({"GET"})
-     */
-    public function verifyAction($verification_code)
-    {
-        $em = $this->getDoctrine()->getManager();
-        
-        // get user by verification code
-        $user = $em->getRepository('OnfanUserBundle:User\User')->findOneBy(array(
-            'verification_code' => $verification_code
-        ));
-
-        if (!$user) {
-            $response =  new Response();
-            $response->setStatusCode(HttpCodes::HTTP_NOT_FOUND, "Unable to find a User for this Code");
-            return $response;
-            //throw $this->createNotFoundException('Unable to find User\User entity.');
-        }
-        
-        // verify user
-        $user->setVerified(TRUE);
-        $user->setVerificationCode(NULL);
-        $em->flush();
-        
-        // send confirmation email
-        $this->sendConfirmationEmail($user);
-        
-        $response =  new Response();
-        $response->setStatusCode(HttpCodes::HTTP_RESET_CONTENT, "User verified");
-        return $response;
-    }
-    
-    /**
-     * Send verification email to user
-     * 
-     * @param \Onfan\UserBundle\Entity\User\User $user
-     */
-    public function sendVerificationEmail(User $user)
-    {
-        $message = \Swift_Message::newInstance()
-                ->setSubject('Onfan - Email de Verificacion de Cuenta')
-                ->setFrom('rhgwebdev@gmail.com')
-                ->setTo($user->getEmail())
-                ->setBody($this->renderView('OnfanUserBundle:User:verification.email.txt.twig', array(
-                        'verification_code' => $user->getVerificationCode(),
-                )));
-        $this->get('mailer')->send($message);			
-    }
-    
-    /**
-     * Send confirmation email to user
-     * 
-     * @param \Onfan\UserBundle\Entity\User\User $user
-     */
-    public function sendConfirmationEmail(User $user)
-    {
-        $message = \Swift_Message::newInstance()
-                ->setSubject('Onfan - Email de Confirmacion de Cuenta')
-                ->setFrom('rhgwebdev@gmail.com')
-                ->setTo($user->getEmail())
-                ->setBody($this->renderView('OnfanUserBundle:User:confirmation.email.txt.twig', array()));
-        $this->get('mailer')->send($message);
-    }
 }
