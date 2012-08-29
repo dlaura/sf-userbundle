@@ -19,14 +19,24 @@ class UserController extends Controller
 {
     /**
      * Get all users
-     * @Route("/users", defaults={"_format"="json"})
+     * @Route("/users", defaults={"_format"="html"})
      * @Method({"GET"})
      */
     public function indexAction()
     {
+        $auth_user = $this->getAuthenticatedUser();
+        if (!$auth_user) {
+            $response = new Response();
+            $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, 'Authentication required');
+            return $response;
+        }
+        
         $em = $this->getDoctrine()->getManager();
 
-        $users = $em->getRepository('OnfanUserBundle:User\User')->findAll();
+        //$users = $em->getRepository('OnfanUserBundle:User\User')->findAll();
+        $users = $em->getRepository('OnfanUserBundle:User\User')->findOneBy(array(
+            'username' => $auth_user->getUsername()
+        ));
         
         $serializer = $this->container->get('serializer');
         $output = $serializer->serialize($users, 'json');
@@ -84,9 +94,8 @@ class UserController extends Controller
         }
         
         // set new user's defaults
-        $user->setVerified(FALSE);
+        $user->setIsVerified(false);
         $user->setVerificationCode(CodeGenerator::generateVerificationCode());
-        $user->setEnabled(TRUE);
         
         // validate user
         $validator = $this->get('validator');
@@ -125,6 +134,21 @@ class UserController extends Controller
      */
     public function showAction($user_id)
     {
+        // TODO: Refactor !!!
+        $auth_user = $this->getAuthenticatedUser();
+        if (!$auth_user) {
+            $response = new Response();
+            $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, 'Authentication required');
+            return $response;
+        }
+        
+        if ($auth_user->getId() != $user_id) {
+            $response = new Response();
+            $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED, 'Not authorized to view other users');
+            return $response;
+        }
+        // end of Refactor
+        
         $em = $this->getDoctrine()->getManager();
 
         $user = $em->getRepository('OnfanUserBundle:User\User')->find($user_id);
@@ -149,6 +173,21 @@ class UserController extends Controller
      */
     public function updateAction($user_id)
     {
+        // TODO: Refactor !!!
+        $auth_user = $this->getAuthenticatedUser();
+        if (!$auth_user) {
+            $response = new Response();
+            $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, 'Authentication required');
+            return $response;
+        }
+        
+        if ($auth_user->getId() != $user_id) {
+            $response = new Response();
+            $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED, 'Not authorized to update other users');
+            return $response;
+        }
+        // end of Refactor
+        
         $em = $this->getDoctrine()->getManager();
         $serializer = $this->container->get('serializer');
 
@@ -223,6 +262,21 @@ class UserController extends Controller
      */
     public function deleteAction($user_id)
     {
+        // TODO: Refactor !!!
+        $auth_user = $this->getAuthenticatedUser();
+        if (!$auth_user) {
+            $response = new Response();
+            $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, 'Authentication required');
+            return $response;
+        }
+        
+        if ($auth_user->getId() != $user_id) {
+            $response = new Response();
+            $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED, 'Not authorized to delete other users');
+            return $response;
+        }
+        // end of Refactor
+        
         $em = $this->getDoctrine()->getManager();
 
         $user = $em->getRepository('OnfanUserBundle:User\User')->find($user_id);
@@ -234,6 +288,13 @@ class UserController extends Controller
             //throw $this->createNotFoundException('Unable to find User\User entity.');
         }
         
+        // remove all user's tokens first from db
+        foreach ($user->getAccessTokens() as $token) {
+            $em->remove($token);
+        }
+        $em->flush();
+        
+        // remove user from db
         $em->remove($user);
         $em->flush();
         
@@ -264,8 +325,8 @@ class UserController extends Controller
         }
         
         // verify user
-        $user->setVerified(TRUE);
-        $user->setVerificationCode(NULL);
+        $user->setIsVerified(true);
+        $user->setVerificationCode(null);
         $em->flush();
         
         // send confirmation email
@@ -306,5 +367,42 @@ class UserController extends Controller
                 ->setTo($user->getEmail())
                 ->setBody($this->renderView('OnfanUserBundle:User:confirmation.email.txt.twig', array()));
         $this->get('mailer')->send($message);
+    }
+    
+    /**
+     * Get authenticated user from token
+     * 
+     * @return User
+     */
+    public function getAuthenticatedUser()
+    {
+        $request = Request::createFromGlobals();
+        $em = $this->getDoctrine()->getManager();
+        
+        $access_token = false;
+        
+        // fetch access token from request
+        if ($request->request->has('accesstoken')) {
+            $access_token = $request->request->get('accesstoken');
+        } elseif ($request->query->has('accesstoken')) {
+            $access_token = $request->query->get('accesstoken');
+        }
+        
+        if ($access_token) {            
+            // get token from db
+            $db_token = $em->getRepository('OnfanUserBundle:User\AccessToken')->findOneBy(array(
+                'access_token' => $access_token
+            ));
+            
+            if ($db_token) {
+                // validate token fetched from db
+                // TODO: check token expiration also
+                if ($db_token->getEnabled()) {
+                    return $db_token->getUser();
+                }
+            }
+        }
+        
+        return false;
     }
 }
