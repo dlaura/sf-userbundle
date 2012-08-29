@@ -25,4 +25,14 @@ class CodeGenerator
     {
         return hash('sha256', uniqid(null, true));
     }
+    
+    /**
+     * Generate Salt
+     * 
+     * @return string
+     */
+    static function generateSalt()
+    {
+        return hash('sha256', uniqid(null, true));
+    }
 }
