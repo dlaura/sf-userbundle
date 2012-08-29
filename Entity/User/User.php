@@ -3,10 +3,15 @@
 namespace Onfan\UserBundle\Entity\User;
 
 use Doctrine\ORM\Mapping as ORM;
+
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\AdvancedUserInterface;
+use Symfony\Component\Security\Core\User\EquatableInterface;
 
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints as DoctrineAssert;
+
+use Onfan\UserBundle\Util\CodeGenerator;
 
 
 /**
@@ -17,7 +22,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints as DoctrineAssert;
  * @ORM\HasLifecycleCallbacks()
  * @DoctrineAssert\UniqueEntity(fields="username", message="Username is already used")
  */
-class User
+class User implements AdvancedUserInterface
 {
     /**
      * @var integer $id
@@ -87,18 +92,18 @@ class User
     private $surname;
     
     /**
-     * @var string $enabled
+     * @var string $isActive
      *
-     * @ORM\Column(name="enabled", type="boolean", nullable=false)
+     * @ORM\Column(name="is_active", type="boolean", nullable=false)
      */
-    private $enabled;
+    private $isActive;
     
     /**
-     * @var string $verified
+     * @var string $isVerified
      *
-     * @ORM\Column(name="verified", type="boolean", nullable=false)
+     * @ORM\Column(name="is_verified", type="boolean", nullable=false)
      */
-    private $verified;
+    private $isVerified;
     
     /**
      * @var string $verification_code
@@ -132,6 +137,10 @@ class User
      * @ORM\OneToMany(targetEntity="AccessToken", mappedBy="user")
      */
     protected $access_tokens;
+    
+    
+    private $enabled;
+    private $verified;
 
 
     /**
@@ -286,6 +295,8 @@ class User
      */
     public function __construct()
     {
+        $this->setIsActive(true);
+        $this->setSalt(CodeGenerator::generateSalt());
         $this->access_tokens = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
@@ -347,49 +358,49 @@ class User
     }
 
     /**
-     * Set enabled
+     * Set isActive
      *
-     * @param boolean $enabled
+     * @param boolean $isActive
      * @return User
      */
-    public function setEnabled($enabled)
+    public function setIsActive($isActive)
     {
-        $this->enabled = $enabled;
+        $this->isActive = $isActive;
     
         return $this;
     }
 
     /**
-     * Get enabled
+     * Get isActive
      *
      * @return boolean 
      */
-    public function getEnabled()
+    public function getIsActive()
     {
-        return $this->enabled;
+        return $this->isActive;
     }
 
     /**
-     * Set verified
+     * Set isVerified
      *
-     * @param boolean $verified
+     * @param boolean $isVerified
      * @return User
      */
-    public function setVerified($verified)
+    public function setIsVerified($isVerified)
     {
-        $this->verified = $verified;
+        $this->isVerified = $isVerified;
     
         return $this;
     }
 
     /**
-     * Get verified
+     * Get isVerified
      *
      * @return boolean 
      */
-    public function getVerified()
+    public function getIsVerified()
     {
-        return $this->verified;
+        return $this->isVerified;
     }
 
     /**
@@ -506,6 +517,50 @@ class User
      */
     public function getSalt()
     {
-        return $this->salt;
+        //return $this->salt;
+        return null;
     }
+    
+    /**
+     * @inheritDoc
+     */
+    public function getRoles()
+    {
+        return array('ROLE_USER', 'ROLE_API_USER');
+    }
+    
+    /**
+     * @inheritDoc
+     */
+    public function eraseCredentials()
+    {
+    }
+    
+    public function isAccountNonExpired()
+    {
+        return true;
+    }
+    
+    public function isAccountNonLocked()
+    {
+        return true;
+    }
+    
+    public function isCredentialsNonExpired()
+    {
+        return true;
+    }
+    
+    public function isEnabled()
+    {
+        return $this->isActive;
+    }
+
+    
+    /*
+    public function isEqualTo(UserInterface $user)
+    {
+        return $this->username === $user->getUsername();
+    }
+    */
 }
