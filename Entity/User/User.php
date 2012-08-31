@@ -560,7 +560,15 @@ class User implements AdvancedUserInterface
      */    
     public function isEqualTo(UserInterface $user)
     {
-        return $this->username === $user->getUsername();
+        if (!$user instanceof User) {
+            return false;
+        }
+        
+        if ($this->username !== $user->getUsername()) {
+            return false;
+        }
+        
+        return true;
     }
     
 }
