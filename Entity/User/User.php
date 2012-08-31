@@ -64,18 +64,18 @@ class User implements AdvancedUserInterface
     private $salt;
 
     /**
-     * @var string $facebook_username
+     * @var string $facebooUsername
      *
      * @ORM\Column(name="facebook_username", type="string", length=255, nullable=true)
      */
-    private $facebook_username;
+    private $facebookUsername;
 
     /**
-     * @var integer $facebook_id
+     * @var integer $facebookId
      *
      * @ORM\Column(name="facebook_id", type="integer", nullable=true)
      */
-    private $facebook_id;
+    private $facebookId;
 
     /**
      * @var string $name
@@ -106,42 +106,37 @@ class User implements AdvancedUserInterface
     private $isVerified;
     
     /**
-     * @var string $verification_code
+     * @var string $verificationCode
      *
      * @ORM\Column(name="verification_code", type="string", length=255, nullable=true)
      */
-    private $verification_code;
+    private $verificationCode;
     
     /**
-     * @var string $created_at
+     * @var string $createdAt
      *
      * @ORM\Column(name="created_at", type="datetime", nullable=false)
      */
-    private $created_at;
+    private $createdAt;
     
     /**
-     * @var string $updated_at
+     * @var string $updatedAt
      *
      * @ORM\Column(name="updated_at", type="datetime", nullable=true)
      */
-    private $updated_at;
+    private $updatedAt;
     
     /**
-     * @var string $last_login
+     * @var string $lastLogin
      *
      * @ORM\Column(name="last_login", type="datetime", nullable=true)
      */
-    private $last_login;
+    private $lastLogin;
     
     /**
      * @ORM\OneToMany(targetEntity="AccessToken", mappedBy="user")
      */
-    protected $access_tokens;
-    
-    
-    private $enabled;
-    private $verified;
-
+    protected $accessTokens;
 
     /**
      * Get id
@@ -200,49 +195,49 @@ class User implements AdvancedUserInterface
     }
 
     /**
-     * Set facebook_username
+     * Set facebookUsername
      *
      * @param string $facebookUsername
      * @return User
      */
     public function setFacebookUsername($facebookUsername)
     {
-        $this->facebook_username = $facebookUsername;
+        $this->facebookUsername = $facebookUsername;
     
         return $this;
     }
 
     /**
-     * Get facebook_username
+     * Get facebookUsername
      *
      * @return string 
      */
     public function getFacebookUsername()
     {
-        return $this->facebook_username;
+        return $this->facebookUsername;
     }
 
     /**
-     * Set facebook_id
+     * Set facebookId
      *
      * @param integer $facebookId
      * @return User
      */
     public function setFacebookId($facebookId)
     {
-        $this->facebook_id = $facebookId;
+        $this->facebookId = $facebookId;
     
         return $this;
     }
 
     /**
-     * Get facebook_id
+     * Get facebookId
      *
      * @return integer 
      */
     public function getFacebookId()
     {
-        return $this->facebook_id;
+        return $this->facebookId;
     }
 
     /**
@@ -297,40 +292,40 @@ class User implements AdvancedUserInterface
     {
         $this->setIsActive(true);
         $this->setSalt(CodeGenerator::generateSalt());
-        $this->access_tokens = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->accessTokens = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
     /**
-     * Add access_tokens
+     * Add accessTokens
      *
      * @param Onfan\UserBundle\Entity\User\AccessToken $accessTokens
      * @return User
      */
     public function addAccessToken(\Onfan\UserBundle\Entity\User\AccessToken $accessTokens)
     {
-        $this->access_tokens[] = $accessTokens;
+        $this->accessTokens[] = $accessTokens;
     
         return $this;
     }
 
     /**
-     * Remove access_tokens
+     * Remove accessTokens
      *
      * @param Onfan\UserBundle\Entity\User\AccessToken $accessTokens
      */
     public function removeAccessToken(\Onfan\UserBundle\Entity\User\AccessToken $accessTokens)
     {
-        $this->access_tokens->removeElement($accessTokens);
+        $this->accessTokens->removeElement($accessTokens);
     }
 
     /**
-     * Get access_tokens
+     * Get accessTokens
      *
      * @return Doctrine\Common\Collections\Collection 
      */
     public function getAccessTokens()
     {
-        return $this->access_tokens;
+        return $this->accessTokens;
     }
     
 
@@ -404,97 +399,89 @@ class User implements AdvancedUserInterface
     }
 
     /**
-     * Set verification_code
+     * Set verificationCode
      *
      * @param string $verificationCode
      * @return User
      */
     public function setVerificationCode($verificationCode)
     {
-        $this->verification_code = $verificationCode;
+        $this->verificationCode = $verificationCode;
     
         return $this;
     }
 
     /**
-     * Get verification_code
+     * Get verificationCode
      *
      * @return string 
      */
     public function getVerificationCode()
     {
-        return $this->verification_code;
+        return $this->verificationCode;
     }
 
     /**
-     * Set created_at
+     * Set createdAt
      *
      * @ORM\PrePersist
-     * @param \DateTime $createdAt
-     * @return User
      */
     public function setCreatedAt()
     {
-        $this->created_at = new \DateTime();
-    
-        return $this;
+        $this->createdAt = new \DateTime();
     }
 
     /**
-     * Get created_at
+     * Get createdAt
      *
      * @return \DateTime 
      */
     public function getCreatedAt()
     {
-        return $this->created_at;
+        return $this->createdAt;
     }
 
     /**
-     * Set updated_at
+     * Set updatedAt
      *
      * @ORM\PreUpdate
-     * @param \DateTime $updatedAt
-     * @return User
      */
     public function setUpdatedAt()
     {
-        $this->updated_at = new \DateTime();
-    
-        return $this;
+        $this->updatedAt = new \DateTime();
     }
 
     /**
-     * Get updated_at
+     * Get updatedAt
      *
      * @return \DateTime 
      */
     public function getUpdatedAt()
     {
-        return $this->updated_at;
+        return $this->updatedAt;
     }
 
     /**
-     * Set last_login
+     * Set lastLogin
      *
      * @param \DateTime $lastLogin
      * @return User
      */
     public function setLastLogin($lastLogin)
     {
-        $this->last_login = $lastLogin;
+        $this->lastLogin = $lastLogin;
     
         return $this;
     }
 
     /**
-     * Get last_login
+     * Get lastLogin
      *
      * @return \DateTime 
      */
     public function getLastLogin()
     {
-        return $this->last_login;
+        return $this->lastLogin;
     }
 
     /**
@@ -536,31 +523,44 @@ class User implements AdvancedUserInterface
     {
     }
     
+    /**
+     * @inheritDoc
+     */
     public function isAccountNonExpired()
     {
         return true;
     }
     
+    /**
+     * @inheritDoc
+     */
     public function isAccountNonLocked()
     {
-        return true;
+        return $this->isVerified;
     }
     
+    /**
+     * @inheritDoc
+     */
     public function isCredentialsNonExpired()
     {
         return true;
     }
     
+    /**
+     * @inheritDoc
+     */
     public function isEnabled()
     {
         return $this->isActive;
     }
 
-    
-    /*
+    /**
+     * @inheritDoc
+     */    
     public function isEqualTo(UserInterface $user)
     {
         return $this->username === $user->getUsername();
     }
-    */
+    
 }
