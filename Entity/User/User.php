@@ -11,6 +11,9 @@ use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints as DoctrineAssert;
 
+use JMS\SerializerBundle\Annotation\ExclusionPolicy;
+use JMS\SerializerBundle\Annotation\Expose;
+
 use Onfan\UserBundle\Util\CodeGenerator;
 
 
@@ -21,6 +24,7 @@ use Onfan\UserBundle\Util\CodeGenerator;
  * @ORM\Entity(repositoryClass="Onfan\UserBundle\Entity\User\UserRepository")
  * @ORM\HasLifecycleCallbacks()
  * @DoctrineAssert\UniqueEntity(fields="username", message="Username is already used")
+ * @ExclusionPolicy("all")
  */
 class User implements AdvancedUserInterface
 {
@@ -30,6 +34,7 @@ class User implements AdvancedUserInterface
      * @ORM\Column(name="id", type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
+     * @Expose
      */
     private $id;
 
@@ -37,6 +42,7 @@ class User implements AdvancedUserInterface
      * @var string $username
      *
      * @ORM\Column(name="username", type="string", unique=true, length=255, nullable=false)
+     * @Expose
      */
     private $username;
     
@@ -45,7 +51,7 @@ class User implements AdvancedUserInterface
      *
      * @ORM\Column(name="email", type="string", length=255, nullable=true)
      * @Assert\Email(message="Invalid email address.")
-     * 
+     * @Expose
      */
     private $email;
 
@@ -67,6 +73,7 @@ class User implements AdvancedUserInterface
      * @var string $facebooUsername
      *
      * @ORM\Column(name="facebook_username", type="string", length=255, nullable=true)
+     * @Expose
      */
     private $facebookUsername;
 
@@ -74,6 +81,7 @@ class User implements AdvancedUserInterface
      * @var integer $facebookId
      *
      * @ORM\Column(name="facebook_id", type="integer", nullable=true)
+     * @Expose
      */
     private $facebookId;
 
@@ -81,6 +89,7 @@ class User implements AdvancedUserInterface
      * @var string $name
      *
      * @ORM\Column(name="name", type="string", length=255, nullable=true)
+     * @Expose
      */
     private $name;
 
@@ -88,6 +97,7 @@ class User implements AdvancedUserInterface
      * @var string $surname
      *
      * @ORM\Column(name="surname", type="string", length=255, nullable=true)
+     * @Expose
      */
     private $surname;
     
@@ -95,6 +105,7 @@ class User implements AdvancedUserInterface
      * @var string $isActive
      *
      * @ORM\Column(name="is_active", type="boolean", nullable=false)
+     * @Expose
      */
     private $isActive;
     
@@ -102,6 +113,7 @@ class User implements AdvancedUserInterface
      * @var string $isVerified
      *
      * @ORM\Column(name="is_verified", type="boolean", nullable=false)
+     * @Expose
      */
     private $isVerified;
     
@@ -116,6 +128,7 @@ class User implements AdvancedUserInterface
      * @var string $createdAt
      *
      * @ORM\Column(name="created_at", type="datetime", nullable=false)
+     * @Expose
      */
     private $createdAt;
     
@@ -123,6 +136,7 @@ class User implements AdvancedUserInterface
      * @var string $updatedAt
      *
      * @ORM\Column(name="updated_at", type="datetime", nullable=true)
+     * @Expose
      */
     private $updatedAt;
     
@@ -130,6 +144,7 @@ class User implements AdvancedUserInterface
      * @var string $lastLogin
      *
      * @ORM\Column(name="last_login", type="datetime", nullable=true)
+     * @Expose
      */
     private $lastLogin;
     
