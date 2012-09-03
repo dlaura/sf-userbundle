@@ -19,12 +19,13 @@ class UserController extends Controller
 {
     /**
      * Get all users
-     * @Route("/users", defaults={"_format"="html"})
+     * @Route("/users", defaults={"_format"="json"})
      * @Method({"GET"})
      */
     public function indexAction()
     {
-        $auth_user = $this->getAuthenticatedUser();
+        $auth_user = $this->getUser();
+        
         if (!$auth_user) {
             $response = new Response();
             $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, 'Authentication required');
@@ -135,19 +136,13 @@ class UserController extends Controller
     public function showAction($user_id)
     {
         // TODO: Refactor !!!
-        $auth_user = $this->getAuthenticatedUser();
-        if (!$auth_user) {
-            $response = new Response();
-            $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, 'Authentication required');
-            return $response;
-        }
+        $auth_user = $this->getUser();
         
         if ($auth_user->getId() != $user_id) {
             $response = new Response();
             $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED, 'Not authorized to view other users');
             return $response;
         }
-        // end of Refactor
         
         $em = $this->getDoctrine()->getManager();
 
@@ -173,20 +168,13 @@ class UserController extends Controller
      */
     public function updateAction($user_id)
     {
-        // TODO: Refactor !!!
-        $auth_user = $this->getAuthenticatedUser();
-        if (!$auth_user) {
-            $response = new Response();
-            $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, 'Authentication required');
-            return $response;
-        }
+        $auth_user = $this->getUser();
         
         if ($auth_user->getId() != $user_id) {
             $response = new Response();
             $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED, 'Not authorized to update other users');
             return $response;
         }
-        // end of Refactor
         
         $em = $this->getDoctrine()->getManager();
         $serializer = $this->container->get('serializer');
@@ -262,20 +250,13 @@ class UserController extends Controller
      */
     public function deleteAction($user_id)
     {
-        // TODO: Refactor !!!
-        $auth_user = $this->getAuthenticatedUser();
-        if (!$auth_user) {
-            $response = new Response();
-            $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, 'Authentication required');
-            return $response;
-        }
+        $auth_user = $this->getUser();
         
         if ($auth_user->getId() != $user_id) {
             $response = new Response();
             $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED, 'Not authorized to delete other users');
             return $response;
         }
-        // end of Refactor
         
         $em = $this->getDoctrine()->getManager();
 
@@ -369,40 +350,4 @@ class UserController extends Controller
         $this->get('mailer')->send($message);
     }
     
-    /**
-     * Get authenticated user from token
-     * 
-     * @return User
-     */
-    public function getAuthenticatedUser()
-    {
-        $request = Request::createFromGlobals();
-        $em = $this->getDoctrine()->getManager();
-        
-        $access_token = false;
-        
-        // fetch access token from request
-        if ($request->request->has('accessToken')) {
-            $access_token = $request->request->get('accessToken');
-        } elseif ($request->query->has('accessToken')) {
-            $access_token = $request->query->get('accessToken');
-        }
-        
-        if ($access_token) {            
-            // get token from db
-            $db_token = $em->getRepository('OnfanUserBundle:User\AccessToken')->findOneBy(array(
-                'access_token' => $access_token
-            ));
-            
-            if ($db_token) {
-                // validate token fetched from db
-                // TODO: check token expiration also
-                if ($db_token->getEnabled()) {
-                    return $db_token->getUser();
-                }
-            }
-        }
-        
-        return false;
-    }
 }
