@@ -382,10 +382,10 @@ class UserController extends Controller
         $access_token = false;
         
         // fetch access token from request
-        if ($request->request->has('accesstoken')) {
-            $access_token = $request->request->get('accesstoken');
-        } elseif ($request->query->has('accesstoken')) {
-            $access_token = $request->query->get('accesstoken');
+        if ($request->request->has('accessToken')) {
+            $access_token = $request->request->get('accessToken');
+        } elseif ($request->query->has('accessToken')) {
+            $access_token = $request->query->get('accessToken');
         }
         
         if ($access_token) {            
