@@ -5,11 +5,15 @@ namespace Onfan\UserBundle\Entity\User;
 use Doctrine\ORM\Mapping as ORM;
 use Onfan\UserBundle\Util\CodeGenerator;
 
+use JMS\SerializerBundle\Annotation\ExclusionPolicy;
+use JMS\SerializerBundle\Annotation\Expose;
+
 /**
  * Onfan\UserBundle\Entity\User\AccessToken
  *
  * @ORM\Table()
  * @ORM\Entity(repositoryClass="Onfan\UserBundle\Entity\User\AccessTokenRepository")
+ * @ExclusionPolicy("all")
  */
 class AccessToken
 {
@@ -26,6 +30,7 @@ class AccessToken
      * @var string $access_token
      *
      * @ORM\Column(name="access_token", type="string", length=255)
+     * @Expose
      */
     private $access_token;
 
@@ -33,6 +38,7 @@ class AccessToken
      * @var \DateTime $created_at
      *
      * @ORM\Column(name="created_at", type="datetime")
+     * @Expose
      */
     private $created_at;
 
