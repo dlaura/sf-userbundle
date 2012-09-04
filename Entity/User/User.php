@@ -9,7 +9,9 @@ use Symfony\Component\Security\Core\User\AdvancedUserInterface;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Bridge\Doctrine\Validator\Constraints as DoctrineAssert;
+//use Symfony\Bridge\Doctrine\Validator\Constraints as DoctrineAssert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
 
 use JMS\SerializerBundle\Annotation\ExclusionPolicy;
 use JMS\SerializerBundle\Annotation\Expose;
@@ -23,7 +25,7 @@ use Onfan\UserBundle\Util\CodeGenerator;
  * @ORM\Table()
  * @ORM\Entity(repositoryClass="Onfan\UserBundle\Entity\User\UserRepository")
  * @ORM\HasLifecycleCallbacks()
- * @DoctrineAssert\UniqueEntity(fields="username", message="Username is already used")
+ * @UniqueEntity(fields="username", message="Username is already used")
  * @ExclusionPolicy("all")
  */
 class User implements AdvancedUserInterface
@@ -42,6 +44,7 @@ class User implements AdvancedUserInterface
      * @var string $username
      *
      * @ORM\Column(name="username", type="string", unique=true, length=255, nullable=false)
+     * @Assert\NotBlank()
      * @Expose
      */
     private $username;
