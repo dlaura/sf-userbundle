@@ -19,7 +19,7 @@ class UserController extends Controller
 {
     /**
      * Get all users
-     * @Route("/users", defaults={"_format"="json"})
+     * @Route("/user", defaults={"_format"="json"})
      * @Method({"GET"})
      */
     public function indexAction()
@@ -28,7 +28,7 @@ class UserController extends Controller
         
         if (!$auth_user) {
             $response = new Response();
-            $response->setStatusCode(HttpCodes::HTTP_FORBIDDEN, 'Authentication required');
+            $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED, 'Unauthorized');
             return $response;
         }
         
@@ -47,17 +47,17 @@ class UserController extends Controller
     
     /**
      * Create a new user
-     * @Route("/users", defaults={"_format"="json"})
+     * @Route("/newuser", defaults={"_format"="json"})
      * @Method({"POST"})
      */
     public function createAction()
-    {
+    {        
         $serializer = $this->container->get('serializer');
         
         $request = Request::createFromGlobals();        
         
         $user = new User();
-	
+        	
         // set data from request        
         if ($request->request->has('username')) {
             $username = $request->request->get('username');
@@ -130,7 +130,7 @@ class UserController extends Controller
     
     /**
      * Get a specific user
-     * @Route("/users/{user_id}", defaults={"_format"="json"})
+     * @Route("/user/{user_id}", defaults={"_format"="json"})
      * @Method({"GET"})
      */
     public function showAction($user_id)
@@ -163,23 +163,23 @@ class UserController extends Controller
     
     /**
      * Update a specific user
-     * @Route("/users/{user_id}", defaults={"_format"="json"})
+     * @Route("/user", defaults={"_format"="json"})
      * @Method({"POST"})
      */
-    public function updateAction($user_id)
+    public function updateAction()
     {
         $auth_user = $this->getUser();
         
-        if ($auth_user->getId() != $user_id) {
+        if (!$auth_user) {
             $response = new Response();
-            $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED, 'Not authorized to update other users');
+            $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED);
             return $response;
         }
         
         $em = $this->getDoctrine()->getManager();
         $serializer = $this->container->get('serializer');
 
-        $user = $em->getRepository('OnfanUserBundle:User\User')->find($user_id);
+        $user = $em->getRepository('OnfanUserBundle:User\User')->find($auth_user->getId());
 
         if (!$user) {
             $response =  new Response();
@@ -245,22 +245,22 @@ class UserController extends Controller
     
     /**
      * Delete a specific user
-     * @Route("/users/{user_id}", defaults={"_format"="json"})
+     * @Route("/user", defaults={"_format"="json"})
      * @Method({"DELETE"})
      */
-    public function deleteAction($user_id)
+    public function deleteAction()
     {
         $auth_user = $this->getUser();
         
-        if ($auth_user->getId() != $user_id) {
+        if (!$auth_user) {
             $response = new Response();
-            $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED, 'Not authorized to delete other users');
+            $response->setStatusCode(HttpCodes::HTTP_UNAUTHORIZED);
             return $response;
         }
         
         $em = $this->getDoctrine()->getManager();
 
-        $user = $em->getRepository('OnfanUserBundle:User\User')->find($user_id);
+        $user = $em->getRepository('OnfanUserBundle:User\User')->find($auth_user->getId());
 
         if (!$user) {
             $response =  new Response();
@@ -286,7 +286,7 @@ class UserController extends Controller
     
     /**
      * Verify a specific user
-     * @Route("/users/verified/{verification_code}", defaults={"_format"="json"})
+     * @Route("/user/verified/{verification_code}", defaults={"_format"="json"})
      * @Method({"GET"})
      */
     public function verifyAction($verification_code)
@@ -295,8 +295,8 @@ class UserController extends Controller
         
         // get user by verification code
         $user = $em->getRepository('OnfanUserBundle:User\User')->findOneBy(array(
-            'verification_code' => $verification_code
-        ));
+            'verificationCode' => $verification_code
+        ));        
 
         if (!$user) {
             $response =  new Response();
